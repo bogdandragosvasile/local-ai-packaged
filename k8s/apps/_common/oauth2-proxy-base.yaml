@@ -1,0 +1,175 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: oauth2-proxy-config
+  namespace: local-ai-system
+data:
+  oauth2_proxy.cfg: |
+    # OAuth2 Proxy Configuration for Keycloak
+
+    # Server settings
+    http_address = "0.0.0.0:4180"
+    https_address = "0.0.0.0:4443"
+
+    # Provider: OIDC (OpenID Connect) for Keycloak
+    provider = "oidc"
+    provider_display_name = "Keycloak"
+
+    # Keycloak endpoints (update with your Keycloak URL)
+    oidc_issuer_url = "https://keycloak.mylegion5pro.me/realms/homelab"
+
+    # OAuth2 client settings (will be overridden by secrets)
+    # client_id = "oauth2-proxy"
+    # client_secret = "from-sealed-secret"
+
+    # Cookie settings
+    cookie_name = "_oauth2_proxy"
+    cookie_secure = true
+    cookie_httponly = true
+    cookie_samesite = "none"
+    cookie_domains = ".lupulup.com,.mylegion5pro.me"
+    cookie_path = "/"
+    cookie_expire = 168h
+
+    # Email validation - allow all emails
+    email_domains = "*"
+
+    # Upstreams (will be set per service via environment)
+    # Pass headers to upstream
+    pass_access_token = true
+    pass_basic_auth = false
+    pass_user_headers = true
+
+    # Username headers
+    set_xauthrequest = true
+    set_authorization_header = true
+
+    # Skip auth for certain paths
+    skip_auth_routes = []
+
+    # Scope for OIDC
+    scope = "openid profile email"
+
+    # User information
+    oidc_groups_claim = "groups"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: oauth2-proxy-secrets
+  namespace: local-ai-system
+type: Opaque
+data:
+  # Note: These are base64 encoded. Cookie secret must be 16, 24, or 32 bytes when decoded
+  client-id: b2F1dGgyLXByb3h5
+  client-secret: UEFMQ0VIT0xERVJfS0VZQ0xPQUtfQ0xJRU5UX1NFQ1JFVA==
+  # Exactly 24 decoded bytes (32 base64 encoded)
+  cookie-secret: TenLMfmWMDV6uhc9aJYUzYQ/2WiFo10iCg==
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oauth2-proxy
+  namespace: local-ai-system
+  labels:
+    app: oauth2-proxy
+    version: v7
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: oauth2-proxy
+  template:
+    metadata:
+      labels:
+        app: oauth2-proxy
+    spec:
+      containers:
+      - name: oauth2-proxy
+        image: quay.io/oauth2-proxy/oauth2-proxy:v7.6.0
+        imagePullPolicy: IfNotPresent
+        args:
+          - --config=/etc/oauth2_proxy/oauth2_proxy.cfg
+        ports:
+        - containerPort: 4180
+          name: http
+          protocol: TCP
+        - containerPort: 4443
+          name: https
+          protocol: TCP
+        env:
+        - name: OAUTH2_PROXY_CLIENT_ID
+          valueFrom:
+            secretKeyRef:
+              name: oauth2-proxy-secrets
+              key: client-id
+        - name: OAUTH2_PROXY_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: oauth2-proxy-secrets
+              key: client-secret
+        - name: OAUTH2_PROXY_COOKIE_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: oauth2-proxy-secrets
+              key: cookie-secret
+        volumeMounts:
+        - name: config
+          mountPath: /etc/oauth2_proxy
+          readOnly: true
+        livenessProbe:
+          httpGet:
+            path: /ping
+            port: 4180
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /ping
+            port: 4180
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        resources:
+          requests:
+            memory: "128Mi"
+            cpu: "100m"
+          limits:
+            memory: "256Mi"
+            cpu: "500m"
+      volumes:
+      - name: config
+        configMap:
+          name: oauth2-proxy-config
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - oauth2-proxy
+              topologyKey: kubernetes.io/hostname
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: oauth2-proxy
+  namespace: local-ai-system
+  labels:
+    app: oauth2-proxy
+spec:
+  type: ClusterIP
+  selector:
+    app: oauth2-proxy
+  ports:
+  - name: http
+    port: 4180
+    targetPort: 4180
+    protocol: TCP
+  - name: https
+    port: 4443
+    targetPort: 4443
+    protocol: TCP

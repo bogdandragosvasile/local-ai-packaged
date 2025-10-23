@@ -1,0 +1,70 @@
+{
+  "clientId": "searxng",
+  "name": "SearXNG - Metasearch Engine",
+  "description": "OAuth2 client for SearXNG metasearch engine",
+  "enabled": true,
+  "protocol": "openid-connect",
+  "publicClient": false,
+  "standardFlowEnabled": true,
+  "implicitFlowEnabled": false,
+  "directAccessGrantsEnabled": true,
+  "serviceAccountsEnabled": false,
+  "bearerOnly": false,
+  "consentRequired": false,
+  "fullScopeAllowed": true,
+  "frontchannelLogout": true,
+  "attributes": {
+    "backchannel.logout.session.required": "true",
+    "backchannel.logout.revoke.offline.tokens": "false",
+    "post.logout.redirect.uris": "https://searxng.lupulup.com",
+    "pkce.code.challenge.method": "S256"
+  },
+  "redirectUris": [
+    "https://searxng.lupulup.com/oauth2/callback",
+    "https://searxng.lupulup.com/*"
+  ],
+  "webOrigins": [
+    "https://searxng.lupulup.com"
+  ],
+  "protocolMappers": [
+    {
+      "name": "username",
+      "protocol": "openid-connect",
+      "protocolMapper": "oidc-usermodel-attribute-mapper",
+      "consentRequired": false,
+      "config": {
+        "userinfo.token.claim": "true",
+        "user.attribute": "username",
+        "id.token.claim": "true",
+        "access.token.claim": "true",
+        "claim.name": "preferred_username",
+        "jsonType.label": "String"
+      }
+    },
+    {
+      "name": "email",
+      "protocol": "openid-connect",
+      "protocolMapper": "oidc-usermodel-property-mapper",
+      "consentRequired": false,
+      "config": {
+        "userinfo.token.claim": "true",
+        "user.attribute": "email",
+        "id.token.claim": "true",
+        "access.token.claim": "true",
+        "claim.name": "email",
+        "jsonType.label": "String"
+      }
+    }
+  ],
+  "defaultClientScopes": [
+    "web-origins",
+    "profile",
+    "email",
+    "roles"
+  ],
+  "optionalClientScopes": [
+    "address",
+    "phone",
+    "offline_access"
+  ]
+}

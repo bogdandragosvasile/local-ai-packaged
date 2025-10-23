@@ -1,0 +1,213 @@
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                    KEYCLOAK SETUP - QUICK REFERENCE CARD                        ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+KEYCLOAK ACCESS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+URL:           https://keycloak.mylegion5pro.me
+Admin Console: https://keycloak.mylegion5pro.me/admin
+Realm:         homelab (select from top-left dropdown)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SERVICE URLS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Flowise:       https://flowise.lupulup.com       [Status: ✅ HTTP 200]
+n8n:           https://n8n.lupulup.com           [Status: ✅ HTTP 200]
+Neo4j Browser: https://neo4j.lupulup.com         [Status: ✅ HTTP 200]
+SearXNG:       https://searxng.lupulup.com       [Status: ✅ HTTP 200]
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TEST USERS TO CREATE (Copy-Paste)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+USER 1: ADMIN
+├─ Username:     admin
+├─ Email:        admin@example.com
+├─ First Name:   Admin
+├─ Last Name:    User
+├─ Password:     Admin@123!
+└─ Group:        admins
+
+USER 2: DEVELOPER
+├─ Username:     developer
+├─ Email:        developer@example.com
+├─ First Name:   Developer
+├─ Last Name:    User
+├─ Password:     Dev@123!
+└─ Group:        developers
+
+USER 3: EXPLORER
+├─ Username:     explorer
+├─ Email:        explorer@example.com
+├─ First Name:   Explorer
+├─ Last Name:    User
+├─ Password:     Explorer@123!
+└─ Group:        explorers
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP-BY-STEP (15 minutes)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[1 min]  Step 1: Navigate to Keycloak Admin Console
+         └─ Visit: https://keycloak.mylegion5pro.me/admin
+         └─ Select: homelab realm (top-left dropdown)
+
+[2 min]  Step 2: Create 3 Groups
+         └─ Go: Manage → Groups
+         └─ Click: [Create group]
+         └─ Create: admins, developers, explorers
+
+[3 min]  Step 3: Create 3 Users (repeat 3x)
+         └─ Go: Manage → Users
+         └─ Click: [Create new user]
+         └─ Fill form with details from above
+         └─ Click: [Create]
+
+[3 min]  Step 4: Set Passwords (for each user)
+         └─ Click: Credentials tab
+         └─ Click: [Set password]
+         └─ Enter: password from above
+         └─ Toggle: Temporary = OFF
+         └─ Click: [Set password]
+
+[3 min]  Step 5: Assign Groups (for each user)
+         └─ Click: Groups tab
+         └─ In Available Groups: select group
+         └─ Click: [Join]
+         └─ Verify: group appears at top
+
+[3 min]  Step 6: Test Services
+         └─ Visit each service URL above
+         └─ Try login with admin/Admin@123!
+         └─ Verify: HTTP 200 response
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+KEYCLOAK MENU STRUCTURE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+LEFT SIDEBAR:
+├─ Manage (click to expand)
+│  ├─ Groups        ← Create groups here
+│  ├─ Users         ← Create users here
+│  ├─ Roles
+│  └─ Clients       ← Verify OAuth2 clients
+│
+├─ Configure (click to expand)
+│  ├─ Client Scopes
+│  ├─ Clients
+│  └─ Mappers
+│
+└─ Realm Settings   ← General realm config
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+OAUTH2 CLIENT SECRETS (Read-Only Reference)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+flowise:       Rxw3PxcTggcYa2oN9vUDx5MSWCL0PAGQ
+n8n:           TN7cydhZ8S6FLYtRNw9jcuOoIMb6wnyW
+neo4j:         hOWJY5INqvb15chOPGO7ooLUP7eZ2voI
+searxng:       bGYFuos4ZLw3k84SbV7ggOOflGlyApU2
+oauth2-proxy:  fNAht42qDGtMx5xedt7B10AXmmKJ5C8A
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+COMMON KEYCLOAK TASKS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Task: Reset User Password
+├─ Manage → Users → select user
+├─ Credentials tab → [Reset password]
+├─ Enter new password
+├─ Toggle: Temporary = OFF
+└─ Click: [Set password]
+
+Task: Add User to Group
+├─ Manage → Users → select user
+├─ Groups tab → select group in "Available Groups"
+├─ Click: [Join]
+└─ Verify: group appears in "Groups" section at top
+
+Task: Delete User
+├─ Manage → Users → select user
+├─ Click: [Delete] button
+└─ Confirm: [Delete]
+
+Task: Verify OAuth Client Setup
+├─ Configure → Clients → select client
+├─ Verify: Valid Redirect URIs (e.g., https://flowise.lupulup.com/auth/callback)
+├─ Verify: Web Origins (e.g., https://flowise.lupulup.com)
+└─ Verify: PKCE Code Challenge = S256
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TROUBLESHOOTING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Problem: Can't access Keycloak
+└─ Solution: Check DNS: nslookup keycloak.mylegion5pro.me
+
+Problem: User can't log in
+└─ Solution: Verify "Enabled" toggle is ON in user details
+
+Problem: Certificate error
+└─ Solution: Wait for cert-manager or check: kubectl get certificate -n keycloak
+
+Problem: Groups not in token
+└─ Solution: Configure Client Scopes → roles → Mappers → add "Group Membership"
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+DOCUMENTATION GUIDES
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Quick & Fast (5 min):      KEYCLOAK-QUICK-START.md
+Visual Diagrams (15 min):  KEYCLOAK-VISUAL-GUIDE.md
+Detailed Steps (30 min):   KEYCLOAK-USER-SETUP-GUIDE.md
+Architecture (20 min):     k8s/docs/APPLICATION-KEYCLOAK-INTEGRATION.md
+Everything (5 min):        KEYCLOAK-SETUP-COMPLETE.md
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+QUICK VERIFICATION CHECKLIST
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+After completing setup:
+
+[ ] Can access https://keycloak.mylegion5pro.me
+[ ] Can select "homelab" realm
+[ ] Created 3 groups (admins, developers, explorers)
+[ ] Created 3 users (admin, developer, explorer)
+[ ] All users have passwords set
+[ ] All users assigned to appropriate groups
+[ ] https://flowise.lupulup.com returns HTTP 200
+[ ] https://n8n.lupulup.com returns HTTP 200
+[ ] https://neo4j.lupulup.com returns HTTP 200
+[ ] https://searxng.lupulup.com returns HTTP 200
+
+If all checked: ✅ SETUP COMPLETE!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SYSTEM STATUS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Keycloak Server:       ✅ Running
+Homelab Realm:         ✅ Configured
+OAuth2 Clients:        ✅ 5 configured (flowise, n8n, neo4j, searxng, oauth2-proxy)
+TLS Certificates:      ✅ All valid (Let's Encrypt, DNS-validated)
+Application Services:  ✅ All running (Flowise, n8n, Neo4j, SearXNG)
+Kubernetes Cluster:    ✅ Talos with 3+ nodes
+Infrastructure:        ✅ PostgreSQL, Qdrant, Redis, Neo4j, Nginx
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SUPPORT LINKS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Keycloak Docs:        https://www.keycloak.org/docs/latest/
+OIDC Specification:   https://openid.net/specs/openid-connect-core-1_0.html
+n8n Docs:             https://docs.n8n.io/
+Flowise Docs:         https://docs.flowiseai.com/
+Neo4j Docs:           https://neo4j.com/docs/
+Local AI Community:   https://thinktank.ottomator.ai/c/local-ai/18
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PRINT THIS CARD - Save for Quick Reference!
+╚════════════════════════════════════════════════════════════════════════════════╝

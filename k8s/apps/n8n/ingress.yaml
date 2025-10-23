@@ -1,0 +1,53 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: n8n
+  namespace: local-ai-n8n
+  labels:
+    app: n8n
+  annotations:
+    # cert-manager integration
+    cert-manager.io/cluster-issuer: "letsencrypt-prod-dns"
+
+    # Force HTTPS redirect
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+
+    # Other security headers
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      more_set_headers "X-Frame-Options: DENY";
+      more_set_headers "X-Content-Type-Options: nosniff";
+      more_set_headers "X-XSS-Protection: 1; mode=block";
+      more_set_headers "Referrer-Policy: strict-origin-when-cross-origin";
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - n8n.lupulup.com
+    secretName: n8n-tls
+  rules:
+  - host: n8n.lupulup.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: n8n
+            port:
+              number: 5678
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: n8n-tls
+  namespace: local-ai-n8n
+spec:
+  secretName: n8n-tls
+  duration: 2160h # 90 days
+  renewBefore: 360h # 15 days
+  commonName: n8n.lupulup.com
+  dnsNames:
+  - n8n.lupulup.com
+  issuerRef:
+    name: letsencrypt-prod-dns
+    kind: ClusterIssuer

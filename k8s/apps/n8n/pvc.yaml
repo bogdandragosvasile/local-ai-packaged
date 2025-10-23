@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: n8n-data
+  namespace: local-ai-n8n
+  labels:
+    app: n8n
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+  # If using dynamic storage provisioning (StorageClass)
+  storageClassName: local-path
+  # If using specific volume, use nodeAffinity or volumeName

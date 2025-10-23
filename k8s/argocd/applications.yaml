@@ -1,0 +1,279 @@
+---
+# ArgoCD Applications for Local AI services
+# Each application is automatically synced when changes are pushed to Git
+
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: local-ai-namespaces
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: local-ai-apps
+  source:
+    repoURL: https://github.com/your-username/local-ai-packaged.git
+    targetRevision: HEAD
+    path: k8s/apps/_common
+    directory:
+      include: "namespace.yaml"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: local-ai-oauth2-proxy
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: local-ai-apps
+  source:
+    repoURL: https://github.com/your-username/local-ai-packaged.git
+    targetRevision: HEAD
+    path: k8s/apps/_common
+    directory:
+      include: "oauth2-proxy*.yaml"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: local-ai-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: local-ai-redis
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: local-ai-apps
+  source:
+    repoURL: https://github.com/your-username/local-ai-packaged.git
+    targetRevision: HEAD
+    path: k8s/apps/redis
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: local-ai-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: local-ai-postgres
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: local-ai-apps
+  source:
+    repoURL: https://github.com/your-username/local-ai-packaged.git
+    targetRevision: HEAD
+    path: k8s/apps/postgres
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: local-ai-data
+  syncPolicy:
+    automated:
+      prune: false  # Prevent accidental deletion of data
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=background
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: local-ai-qdrant
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: local-ai-apps
+  source:
+    repoURL: https://github.com/your-username/local-ai-packaged.git
+    targetRevision: HEAD
+    path: k8s/apps/qdrant
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: local-ai-data
+  syncPolicy:
+    automated:
+      prune: false  # Prevent accidental deletion of data
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=background
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: local-ai-neo4j
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: local-ai-apps
+  source:
+    repoURL: https://github.com/your-username/local-ai-packaged.git
+    targetRevision: HEAD
+    path: k8s/apps/neo4j
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: local-ai-data
+  syncPolicy:
+    automated:
+      prune: false  # Prevent accidental deletion of data
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PrunePropagationPolicy=background
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: local-ai-n8n
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: local-ai-apps
+  source:
+    repoURL: https://github.com/your-username/local-ai-packaged.git
+    targetRevision: HEAD
+    path: k8s/apps/n8n
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: local-ai-n8n
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: local-ai-flowise
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: local-ai-apps
+  source:
+    repoURL: https://github.com/your-username/local-ai-packaged.git
+    targetRevision: HEAD
+    path: k8s/apps/flowise
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: local-ai-flowise
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: local-ai-searxng
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: local-ai-apps
+  source:
+    repoURL: https://github.com/your-username/local-ai-packaged.git
+    targetRevision: HEAD
+    path: k8s/apps/searxng
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: local-ai-search
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m

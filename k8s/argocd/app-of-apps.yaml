@@ -1,0 +1,64 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: local-ai-app-of-apps
+  namespace: argocd
+  finalizers:
+    - resources-finalizer.argocd.argoproj.io
+spec:
+  project: local-ai-apps
+  source:
+    repoURL: https://github.com/your-username/local-ai-k8s.git
+    # Or use this repo:
+    # repoURL: https://github.com/your-username/local-ai-packaged.git
+    # path: k8s/apps
+    targetRevision: HEAD
+    path: apps
+    directory:
+      recurse: true
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m
+  revisionHistoryLimit: 10
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: local-ai-apps
+  namespace: argocd
+spec:
+  description: Local AI applications project
+  sourceRepos:
+    - https://github.com/your-username/local-ai-k8s.git
+    - https://github.com/your-username/local-ai-packaged.git
+    - https://charts.bitnami.com/bitnami
+    - https://helm.pydio.com/
+  destinations:
+    - namespace: 'local-ai-*'
+      server: https://kubernetes.default.svc
+    - namespace: 'argocd'
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: ''
+      kind: Namespace
+    - group: 'cert-manager.io'
+      kind: Certificate
+    - group: 'cert-manager.io'
+      kind: ClusterIssuer
+  namespaceResourceBlacklist:
+    - group: ''
+      kind: ResourceQuota
+    - group: ''
+      kind: LimitRange

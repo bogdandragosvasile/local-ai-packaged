@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: local-ai-n8n
+  labels:
+    name: local-ai-n8n
+    app: local-ai
+    component: workflow-automation

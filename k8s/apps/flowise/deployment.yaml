@@ -1,0 +1,260 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: local-ai-flowise
+  labels:
+    app: flowise
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: flowise-config
+  namespace: local-ai-flowise
+data:
+  PORT: "3000"
+  DEBUG: "true"
+  LOG_LEVEL: "info"
+  FLOWISE_USERNAME: "admin"
+  # Password in secret
+  DATABASE_PATH: "/data"
+  APIKEY_PATH: "/data"
+  # External service URLs
+  OLLAMA_BASE_URL: "https://ollama.mylegion5pro.me"
+  OPENWEBUI_BASE_URL: "https://openwebui.mylegion5pro.me"
+  QDRANT_URL: "http://qdrant.local-ai-data.svc.cluster.local:6333"
+  N8N_BASE_URL: "https://n8n.lupulup.com"
+  # Keycloak OIDC Configuration
+  KEYCLOAK_ENABLED: "true"
+  KEYCLOAK_CLIENT_ID: "flowise"
+  KEYCLOAK_REALM_URL: "https://keycloak.mylegion5pro.me/realms/homelab"
+  KEYCLOAK_AUTH_URL: "https://keycloak.mylegion5pro.me/realms/homelab/protocol/openid-connect/auth"
+  KEYCLOAK_TOKEN_URL: "https://keycloak.mylegion5pro.me/realms/homelab/protocol/openid-connect/token"
+  KEYCLOAK_USERINFO_URL: "https://keycloak.mylegion5pro.me/realms/homelab/protocol/openid-connect/userinfo"
+  KEYCLOAK_REDIRECT_URI: "https://flowise.lupulup.com/auth/callback"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: flowise-secrets
+  namespace: local-ai-flowise
+type: Opaque
+stringData:
+  FLOWISE_PASSWORD: "REPLACE_ME_FLOWISE_PASSWORD"
+  APIKEY: "REPLACE_ME_APIKEY"
+  KEYCLOAK_CLIENT_SECRET: "Rxw3PxcTggcYa2oN9vUDx5MSWCL0PAGQ"
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: flowise-data
+  namespace: local-ai-flowise
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  storageClassName: local-path
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flowise
+  namespace: local-ai-flowise
+  labels:
+    app: flowise
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flowise
+  template:
+    metadata:
+      labels:
+        app: flowise
+    spec:
+      containers:
+      - name: flowise
+        image: flowiseai/flowise:latest
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: http
+          containerPort: 3000
+          protocol: TCP
+        env:
+        - name: PORT
+          valueFrom:
+            configMapKeyRef:
+              name: flowise-config
+              key: PORT
+        - name: DEBUG
+          valueFrom:
+            configMapKeyRef:
+              name: flowise-config
+              key: DEBUG
+        - name: LOG_LEVEL
+          valueFrom:
+            configMapKeyRef:
+              name: flowise-config
+              key: LOG_LEVEL
+        - name: FLOWISE_USERNAME
+          valueFrom:
+            configMapKeyRef:
+              name: flowise-config
+              key: FLOWISE_USERNAME
+        - name: FLOWISE_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: flowise-secrets
+              key: FLOWISE_PASSWORD
+        - name: APIKEY
+          valueFrom:
+            secretKeyRef:
+              name: flowise-secrets
+              key: APIKEY
+        - name: DATABASE_PATH
+          valueFrom:
+            configMapKeyRef:
+              name: flowise-config
+              key: DATABASE_PATH
+        - name: OLLAMA_BASE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: flowise-config
+              key: OLLAMA_BASE_URL
+        - name: QDRANT_URL
+          valueFrom:
+            configMapKeyRef:
+              name: flowise-config
+              key: QDRANT_URL
+        - name: N8N_BASE_URL
+          valueFrom:
+            configMapKeyRef:
+              name: flowise-config
+              key: N8N_BASE_URL
+        - name: KEYCLOAK_ENABLED
+          valueFrom:
+            configMapKeyRef:
+              name: flowise-config
+              key: KEYCLOAK_ENABLED
+        - name: KEYCLOAK_CLIENT_ID
+          valueFrom:
+            configMapKeyRef:
+              name: flowise-config
+              key: KEYCLOAK_CLIENT_ID
+        - name: KEYCLOAK_CLIENT_SECRET
+          valueFrom:
+            secretKeyRef:
+              name: flowise-secrets
+              key: KEYCLOAK_CLIENT_SECRET
+        - name: KEYCLOAK_REALM_URL
+          valueFrom:
+            configMapKeyRef:
+              name: flowise-config
+              key: KEYCLOAK_REALM_URL
+        - name: KEYCLOAK_AUTH_URL
+          valueFrom:
+            configMapKeyRef:
+              name: flowise-config
+              key: KEYCLOAK_AUTH_URL
+        - name: KEYCLOAK_TOKEN_URL
+          valueFrom:
+            configMapKeyRef:
+              name: flowise-config
+              key: KEYCLOAK_TOKEN_URL
+        - name: KEYCLOAK_USERINFO_URL
+          valueFrom:
+            configMapKeyRef:
+              name: flowise-config
+              key: KEYCLOAK_USERINFO_URL
+        - name: KEYCLOAK_REDIRECT_URI
+          valueFrom:
+            configMapKeyRef:
+              name: flowise-config
+              key: KEYCLOAK_REDIRECT_URI
+        volumeMounts:
+        - name: flowise-data
+          mountPath: /data
+        - name: tmp
+          mountPath: /tmp
+        livenessProbe:
+          httpGet:
+            path: /
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /
+            port: http
+          initialDelaySeconds: 15
+          periodSeconds: 10
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+      volumes:
+      - name: flowise-data
+        persistentVolumeClaim:
+          claimName: flowise-data
+      - name: tmp
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: flowise
+  namespace: local-ai-flowise
+spec:
+  type: ClusterIP
+  selector:
+    app: flowise
+  ports:
+  - name: http
+    port: 3000
+    targetPort: http
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: flowise
+  namespace: local-ai-flowise
+  annotations:
+    cert-manager.io/cluster-issuer: "letsencrypt-prod-dns"
+    nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+spec:
+  ingressClassName: nginx
+  tls:
+  - hosts:
+    - flowise.lupulup.com
+    secretName: flowise-tls
+  rules:
+  - host: flowise.lupulup.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: flowise
+            port:
+              number: 3000
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: flowise-tls
+  namespace: local-ai-flowise
+spec:
+  secretName: flowise-tls
+  duration: 2160h
+  renewBefore: 360h
+  commonName: flowise.lupulup.com
+  dnsNames:
+  - flowise.lupulup.com
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer

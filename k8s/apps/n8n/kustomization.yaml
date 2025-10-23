@@ -1,0 +1,51 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+metadata:
+  name: n8n
+  namespace: local-ai-n8n
+
+namespace: local-ai-n8n
+
+resources:
+- namespace.yaml
+- configmap.yaml
+- secret.yaml
+- pvc.yaml
+- deployment.yaml
+- service.yaml
+- ingress.yaml
+
+commonLabels:
+  app: n8n
+  component: workflow-automation
+  managed-by: argocd
+
+commonAnnotations:
+  description: "n8n - Open source workflow automation"
+  documentation: "https://docs.n8n.io"
+
+replicas:
+- name: n8n
+  count: 1
+
+# Image pinning
+images:
+- name: n8nio/n8n
+  newName: n8nio/n8n
+  newTag: latest
+
+# Patches for production settings
+patchesStrategicMerge:
+- |-
+  apiVersion: apps/v1
+  kind: Deployment
+  metadata:
+    name: n8n
+  spec:
+    template:
+      spec:
+        containers:
+        - name: n8n
+          env:
+          - name: NODE_ENV
+            value: "production"

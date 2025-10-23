@@ -1,0 +1,151 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: local-ai-data
+  labels:
+    app: data-layer
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: qdrant-config
+  namespace: local-ai-data
+data:
+  server.yaml: |
+    server:
+      http:
+        uri: "0.0.0.0:6333"
+      grpc:
+        uri: "0.0.0.0:6334"
+    storage:
+      storage_path: /qdrant/storage
+      snapshots_path: /qdrant/snapshots
+      wal_path: /qdrant/wal
+    log_level: info
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: qdrant-data
+  namespace: local-ai-data
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 50Gi
+  storageClassName: local-path
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: qdrant
+  namespace: local-ai-data
+  labels:
+    app: qdrant
+spec:
+  serviceName: qdrant
+  replicas: 1
+  selector:
+    matchLabels:
+      app: qdrant
+  template:
+    metadata:
+      labels:
+        app: qdrant
+    spec:
+      containers:
+      - name: qdrant
+        image: qdrant/qdrant:v1.10.0
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: http
+          containerPort: 6333
+          protocol: TCP
+        - name: grpc
+          containerPort: 6334
+          protocol: TCP
+        env:
+        - name: QDRANT_API_KEY
+          valueFrom:
+            secretKeyRef:
+              name: qdrant-secrets
+              key: api-key
+        volumeMounts:
+        - name: qdrant-data
+          mountPath: /qdrant
+        - name: config
+          mountPath: /qdrant/config
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 30
+          periodSeconds: 30
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 15
+          periodSeconds: 10
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "2Gi"
+            cpu: "1000m"
+      volumes:
+      - name: config
+        configMap:
+          name: qdrant-config
+      - name: qdrant-data
+        persistentVolumeClaim:
+          claimName: qdrant-data
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: qdrant-secrets
+  namespace: local-ai-data
+type: Opaque
+stringData:
+  api-key: "REPLACE_ME_QDRANT_API_KEY"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: qdrant
+  namespace: local-ai-data
+  labels:
+    app: qdrant
+spec:
+  clusterIP: None
+  selector:
+    app: qdrant
+  ports:
+  - name: http
+    port: 6333
+    targetPort: 6333
+  - name: grpc
+    port: 6334
+    targetPort: 6334
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: qdrant-client
+  namespace: local-ai-data
+spec:
+  type: ClusterIP
+  selector:
+    app: qdrant
+  ports:
+  - name: http
+    port: 6333
+    targetPort: 6333
+    protocol: TCP
+  - name: grpc
+    port: 6334
+    targetPort: 6334
+    protocol: TCP

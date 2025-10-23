@@ -1,0 +1,39 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: local-ai-system
+  labels:
+    name: local-ai-system
+    app: local-ai
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: local-ai-n8n
+  labels:
+    name: local-ai-n8n
+    app: local-ai
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: local-ai-flowise
+  labels:
+    name: local-ai-flowise
+    app: local-ai
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: local-ai-data
+  labels:
+    name: local-ai-data
+    app: local-ai
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: local-ai-search
+  labels:
+    name: local-ai-search
+    app: local-ai
